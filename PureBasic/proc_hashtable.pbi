@@ -37,28 +37,28 @@ Procedure sortinghash(id)
   Protected *min=AllocateMemory(len), *max=AllocateMemory(len)
   Protected err, i, rescmp, pos
   Protected res.comparsationStructure
-  Shared sortjob.sortjobStructure()
+  Shared sortjob()
   Shared keyMutex, totallaunched
   
-  *arrPointer = sortjob(Str(id))\ptarr
-  *arrPointer_sorted = sortjob(Str(id))\sortptarray
+  *arrPointer = sortjob(id)\ptarr
+  *arrPointer_sorted = sortjob(id)\sortptarray
   CopyMemory(*arrPointer, *min, len)
   
-  ;prntarr("",sortjob(Str(id))\ptarr, sortjob(Str(id))\totallines)
+  ;prntarr("",sortjob(id)\ptarr, sortjob(id)\totallines)
   
-  ;PrintN("Total points in Array:"+Str(sortjob(Str(id))\totallines))
+  ;PrintN("Total points in Array:"+Str(sortjob(id)\totallines))
   ;first find min value
    
-  findMinMax8(*arrPointer,sortjob(Str(id))\totallines, *min,*max)   
+  findMinMax8(*arrPointer,sortjob(id)\totallines, *min,*max)   
   pos=0
   CopyMemory(*min, *arrPointer_sorted+pos*len, len)
   PrintN("MIN:0x"+m_gethex8(*arrPointer_sorted))
   Print("Sorting")
-  For i=0 To sortjob(Str(id))\totallines-1
+  For i=0 To sortjob(id)\totallines-1
     If Not i%1000
       Print(".")
     EndIf
-    foundinarr8(*arrPointer+i*len, sortjob(Str(id))\sortptarray, 0, pos, @res.comparsationStructure)
+    foundinarr8(*arrPointer+i*len, sortjob(id)\sortptarray, 0, pos, @res.comparsationStructure)
     ;PrintN("("+res\pos+","+res\direction+")")
     If res\pos=-1
       ;that mean that value is Not found in range
@@ -75,7 +75,7 @@ Procedure sortinghash(id)
     Else
       ;PrintN("Warning!!!>"+getStrfrombin(*arrPointer+i*len,len))
     EndIf
-    ;prntarr("",sortjob(Str(id))\sortptarray, sortjob(Str(id))\totallines)
+    ;prntarr("",sortjob(id)\sortptarray, sortjob(id)\totallines)
   Next i
   
   
@@ -92,18 +92,18 @@ Procedure sortinghashMinMax(id)
   Protected *max=AllocateMemory(len)
   Protected err, i, rescmp, pos
   Protected res.comparsationStructure
-  Shared sortjob.sortjobStructure()
+  Shared sortjob()
   Shared keyMutex, totallaunched
   Shared waletcounter
   
-  *arrPointer = sortjob(Str(id))\ptarr
-  *arrPointer_sorted = sortjob(Str(id))\sortptarray
+  *arrPointer = sortjob(id)\ptarr
+  *arrPointer_sorted = sortjob(id)\sortptarray
   
   CopyMemory(*arrPointer_sorted, *min, len)  
   CopyMemory(*arrPointer_sorted+len, *max, len)
   FillMemory(*arrPointer_sorted, len*2)
   
-  counters = sortjob(Str(id))\totallines  
+  counters = sortjob(id)\totallines  
     
   ;PrintN(msg$+"Total points in Source Array: "+Str(totallines))
   ;PrintN(msg$+"MIN: "+getStrfrombin(*min,len))
@@ -134,7 +134,7 @@ Procedure sortinghashMinMax(id)
     curprocent = pos*100/counters
     If curprocent-persent>0.5
       persent = curprocent
-      sortjob(Str(id))\curpos = pos
+      sortjob(id)\curpos = pos
       ;PrintN(msg$+"Sorting:"+Str(persent)+"%") : ConsoleColor(7, 0)
     EndIf
     
@@ -156,7 +156,7 @@ Procedure sortinghashMinMax(id)
     Else
       PrintN(msg$+"Warning!!!>"+m_gethex8(*arrPointer+i*len))
     EndIf
-    ;prntarr("",sortjob(Str(id))\sortptarray, counters)
+    ;prntarr("",sortjob(id)\sortptarray, counters)
   Next i
   
     
@@ -171,7 +171,7 @@ EndProcedure
 Procedure SortingArrays(totalthread, *xpoint)
   Protected sortbatchperthr, sortrest, i,j, multimode, filebinname$, full_size, len=8, hash.s, *pp, counters, totalpos, jobcomplete.d, prejobcomplete.d, wrbytes, savedbytes, maxsavebytes, loadedbytes
   Protected totalloadbytes, maxloadbytes, A$
-  Shared sortjob.sortjobStructure()  
+  Shared sortjob()  
   Shared totallaunched
   Shared mainpub
   Shared *BabyArr, *BabyArrSorted, *BabyArrSorted_unalign
@@ -260,9 +260,9 @@ Procedure SortingArrays(totalthread, *xpoint)
           EndIf
         Next j
         
-        sortjob(Str(i))\ptarr = *BabyArr
-        sortjob(Str(i))\sortptarray = *pp
-        sortjob(Str(i))\totallines = counters
+        sortjob(i)\ptarr = *BabyArr
+        sortjob(i)\sortptarray = *pp
+        sortjob(i)\totallines = counters
         
         ;copy rangeB to destination array
         CopyMemory(*min, *pp, len)
@@ -278,7 +278,7 @@ Procedure SortingArrays(totalthread, *xpoint)
         
         *pp+counters*len
         
-        ;prntarr("",sortjob(Str(i))\sortptarray, sortjob(Str(i))\totallines)
+        ;prntarr("",sortjob(i)\sortptarray, sortjob(i)\totallines)
       Next i
       ;last thread
       CopyMemory(*R8, *re8,8)
@@ -296,9 +296,9 @@ Procedure SortingArrays(totalthread, *xpoint)
         EndIf
       Next j  
       
-      sortjob(Str(i))\ptarr = *BabyArr
-      sortjob(Str(i))\sortptarray = *pp
-      sortjob(Str(i))\totallines = counters
+      sortjob(i)\ptarr = *BabyArr
+      sortjob(i)\sortptarray = *pp
+      sortjob(i)\totallines = counters
        
       ;copy rangeB to destination array
       CopyMemory(*min, *pp, len)
@@ -318,7 +318,7 @@ Procedure SortingArrays(totalthread, *xpoint)
         ;while waitin print persantage
         totalpos=0
         For i=0 To totalthread-1
-          totalpos +sortjob(Str(i))\curpos
+          totalpos +sortjob(i)\curpos
         Next i
         
         jobcomplete = totalpos*100/waletcounter
@@ -330,9 +330,9 @@ Procedure SortingArrays(totalthread, *xpoint)
       Wend
     Else
       PrintN("  Sorting Babys Array ["+Str(waletcounter)+"] with [1] thread")
-      sortjob(Str(0))\ptarr = *BabyArr
-      sortjob(Str(0))\sortptarray = *BabyArrSorted
-      sortjob(Str(0))\totallines = waletcounter
+      sortjob(0)\ptarr = *BabyArr
+      sortjob(0)\sortptarray = *BabyArrSorted
+      sortjob(0)\totallines = waletcounter
       sortinghash(0)
     EndIf
     

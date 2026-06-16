@@ -412,13 +412,13 @@ Procedure baby(id)
   *my_pubX = *inv+128
   *my_pubY = *inv+160
   
-  *arr = job(Str(id))\arr  
-  *newarrr = job(Str(id))\NewPointsArr
-  totalpoints = job(Str(id))\totalpoints
-  pointsperbatch = job(Str(id))\pointsperbatch
+  *arr = job(id)\arr  
+  *newarrr = job(id)\NewPointsArr
+  totalpoints = job(id)\totalpoints
+  pointsperbatch = job(id)\pointsperbatch
   
-  Curve::m_sethex32(*my_pubX, @job(Str(id))\beginrangeX$)
-  Curve::m_sethex32(*my_pubY, @job(Str(id))\beginrangeY$)
+  Curve::m_sethex32(*my_pubX, @job(id)\beginrangeX$)
+  Curve::m_sethex32(*my_pubY, @job(id)\beginrangeY$)
   
   ;PrintN(msg$+"("+Curve::m_gethex32(*my_pubX)+Curve::m_gethex32(*my_pubY)+")")
   
@@ -486,24 +486,24 @@ Procedure GenBabys(*xpoint, *ypoint)
       
       jobperthread = waletcounter/totalCPUcout
       PrintN(L("job_thread")+Str(jobperthread)+" items")
-      job(Str(0))\arr = *HelperArr
-      job(Str(0))\NewPointsArr = *BabyArr
-      job(Str(0))\totalpoints = jobperthread
-      job(Str(0))\pointsperbatch = 1024
-      job(Str(0))\beginrangeX$  = Curve::m_gethex32(*xpoint)
-      job(Str(0))\beginrangeY$  = Curve::m_gethex32(*ypoint)
+      job(0)\arr = *HelperArr
+      job(0)\NewPointsArr = *BabyArr
+      job(0)\totalpoints = jobperthread
+      job(0)\pointsperbatch = 1024
+      job(0)\beginrangeX$  = Curve::m_gethex32(*xpoint)
+      job(0)\beginrangeY$  = Curve::m_gethex32(*ypoint)
       
       restjob = waletcounter - (jobperthread * totalCPUcout)
       PrintN(L("reset_points")+Str(restjob))
       
     Else  
       PrintN(L("job_thread")+Str(waletcounter)+" items")
-      job(Str(0))\arr = *HelperArr
-      job(Str(0))\NewPointsArr = *BabyArr
-      job(Str(0))\totalpoints = waletcounter
-      job(Str(0))\pointsperbatch = 1024
-      job(Str(0))\beginrangeX$  = Curve::m_gethex32(*xpoint)
-      job(Str(0))\beginrangeY$  = Curve::m_gethex32(*ypoint)
+      job(0)\arr = *HelperArr
+      job(0)\NewPointsArr = *BabyArr
+      job(0)\totalpoints = waletcounter
+      job(0)\pointsperbatch = 1024
+      job(0)\beginrangeX$  = Curve::m_gethex32(*xpoint)
+      job(0)\beginrangeY$  = Curve::m_gethex32(*ypoint)
     EndIf
     
     
@@ -511,16 +511,16 @@ Procedure GenBabys(*xpoint, *ypoint)
     totallaunched+1
     If totalCPUcout>1 And waletcounter>1024
       For i = 1 To totalCPUcout-1
-        job(Str(i))\arr = *HelperArr+i*1024*96
-        job(Str(i))\NewPointsArr = *BabyArr+i*jobperthread*8
-        job(Str(i))\totalpoints = jobperthread
-        job(Str(i))\pointsperbatch = 1024
+        job(i)\arr = *HelperArr+i*1024*96
+        job(i)\NewPointsArr = *BabyArr+i*jobperthread*8
+        job(i)\totalpoints = jobperthread
+        job(i)\pointsperbatch = 1024
         a$=Hex(jobperthread*i)
         Curve::m_sethex32(*bufferResult, @a$)
         Curve::m_PTMULX64(*addX, *addY, *CurveGX, *CurveGY, *bufferResult,*CurveP)
          Curve::m_ADDPTX64(*addX,*addY,*xpoint, *ypoint,*addX,*addY,*CurveP)
-        job(Str(i))\beginrangeX$  = Curve::m_gethex32(*addX)
-        job(Str(i))\beginrangeY$  = Curve::m_gethex32(*addY)
+        job(i)\beginrangeX$  = Curve::m_gethex32(*addX)
+        job(i)\beginrangeY$  = Curve::m_gethex32(*addY)
         CreateThread(@baby(),i)
         totallaunched+1
       Next i
@@ -534,12 +534,12 @@ Procedure GenBabys(*xpoint, *ypoint)
         Curve::m_sethex32(*bufferResult, @a$)
         Curve::m_PTMULX64(*addX, *addY, *CurveGX, *CurveGY, *bufferResult,*CurveP)
          Curve::m_ADDPTX64(*addX,*addY,*xpoint, *ypoint,*addX,*addY,*CurveP)
-        job(Str(0))\beginrangeX$  = Curve::m_gethex32(*addX)
-        job(Str(0))\beginrangeY$  = Curve::m_gethex32(*addY)
-        job(Str(0))\arr = *HelperArr
-        job(Str(0))\NewPointsArr = *BabyArr+i*jobperthread*8
-        job(Str(0))\totalpoints = restjob
-        job(Str(0))\pointsperbatch = 1024
+        job(0)\beginrangeX$  = Curve::m_gethex32(*addX)
+        job(0)\beginrangeY$  = Curve::m_gethex32(*addY)
+        job(0)\arr = *HelperArr
+        job(0)\NewPointsArr = *BabyArr+i*jobperthread*8
+        job(0)\totalpoints = restjob
+        job(0)\pointsperbatch = 1024
         baby(0)
     EndIf
     
@@ -741,16 +741,16 @@ Procedure giant(id)
   *Rbx= *inv+192
   *Rby= *inv+224
   
-  *arr = job(Str(id))\arr  
-  *newarrr = job(Str(id))\NewPointsArr
-  totalpoints = job(Str(id))\totalpoints
-  pointsperbatch = job(Str(id))\pointsperbatch
-  Yoffset = job(Str(id))\Yoffset
+  *arr = job(id)\arr  
+  *newarrr = job(id)\NewPointsArr
+  totalpoints = job(id)\totalpoints
+  pointsperbatch = job(id)\pointsperbatch
+  Yoffset = job(id)\Yoffset
   
-  Curve::m_sethex32(*Rbx, @job(Str(id))\beginrangeX$)
-  Curve::m_sethex32(*Rby, @job(Str(id))\beginrangeY$)
-   Curve::m_sethex32(*my_pubX, @job(Str(id))\beginrangeX$)
-   Curve::m_sethex32(*my_pubY, @job(Str(id))\beginrangeY$)
+  Curve::m_sethex32(*Rbx, @job(id)\beginrangeX$)
+  Curve::m_sethex32(*Rby, @job(id)\beginrangeY$)
+   Curve::m_sethex32(*my_pubX, @job(id)\beginrangeX$)
+   Curve::m_sethex32(*my_pubY, @job(id)\beginrangeY$)
    
   ;PrintN(msg$+"("+Curve::m_gethex32(*my_pubX)+Curve::m_gethex32(*my_pubY)+")")
   
@@ -884,13 +884,13 @@ Procedure Save_Load_Giants()
     Curve::fillarrayN(*HelperArr , 1024, ADDPUBG\x, ADDPUBG\y)
     ;prntarrBIG(*HelperArr, 16)
     
-    job(Str(0))\arr = *HelperArr
-    job(Str(0))\NewPointsArr = *GiantArr
-    job(Str(0))\totalpoints = maxnonce
-    job(Str(0))\pointsperbatch = 1024
-    job(Str(0))\beginrangeX$  = Curve::m_gethex32(ADDPUBG\x)
-    job(Str(0))\beginrangeY$  = Curve::m_gethex32(ADDPUBG\y)
-    job(Str(0))\Yoffset = maxnonce * 32
+    job(0)\arr = *HelperArr
+    job(0)\NewPointsArr = *GiantArr
+    job(0)\totalpoints = maxnonce
+    job(0)\pointsperbatch = 1024
+    job(0)\beginrangeX$  = Curve::m_gethex32(ADDPUBG\x)
+    job(0)\beginrangeY$  = Curve::m_gethex32(ADDPUBG\y)
+    job(0)\Yoffset = maxnonce * 32
     giant(0)
     
     CompilerIf #ENABLE_VERIFICATIONS

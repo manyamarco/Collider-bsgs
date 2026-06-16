@@ -155,8 +155,8 @@ Define pparam.w
 Define.s Gx , Gy, p, privkey, privkeyend, pball$, walletall$, mainpub, addpubs, privkey1, privkey2, privkey3, privkey4, privkey5, privkey6, privkey7, privkey8 
 Define waletcounter, usedgpucount, isruning
 Define maxnonce, *BabyArr, *BabyArr_unalign, *BabyArrSorted, *BabyArrSorted_unalign, *GiantArr, *GiantArrPacked, *HelperArr, totallaunched, *Table_unalign, *Table, *GpuHT_unalign, *GpuHT, *CpuHTPacked_unalign, *CpuHTPacked
-Define NewMap job.JobSturucture()
-Define NewMap sortjob.sortjobStructure()
+Global Dim job.JobSturucture(256)
+Global Dim sortjob.sortjobStructure(256)
 Define keyMutex, quit, *PointerTable_unalign, *PointerTable
 Define *PrivBIG, *PrivBIG2, *PrivBIG3, *key7, PubkeyBIG.CoordPoint, *MaxNonceBIG, FINDPUBG.CoordPoint, ADDPUBG.CoordPoint, *bufferResult, *addX, *addY, *PRKADDBIG, PUBADDBIG.CoordPoint, REALPUB.CoordPoint, *WINKEY, Two.CoordPoint
 Define *WidthRange
