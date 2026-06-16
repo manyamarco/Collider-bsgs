@@ -73,15 +73,15 @@ EndMacro
 
 Macro mul4blo(offset)  
   !mov rax,r10
-  !mov rbx, [rdi+offset]
-  !mul rbx ;edx:eax
+  !mov r11, [rdi+offset]
+  !mul r11 ;edx:eax
   !mov [rsi+offset], rax
 EndMacro
 
 Macro madhi(offsetB, offsetC)  
- !mov rbx, [rdi+offsetB] ;rbx lo32b  =ebx
+ !mov r11, [rdi+offsetB] ;r11 lo32b  =r11d
  !mov rax,r10
- !mul rbx;edx:eax 
+ !mul r11;edx:eax 
  !add rdx,[rsi+offsetC]
  ;store carry
  !mov rcx,0
@@ -91,9 +91,9 @@ Macro madhi(offsetB, offsetC)
 EndMacro
 
 Macro madhicc(offsetB, offsetC) 
- !mov rbx, [rdi+offsetB] ;rbx lo32b  =ebx
+ !mov r11, [rdi+offsetB] ;r11 lo32b  =r11d
  !mov rax,r10
- !mul rbx;edx:eax 
+ !mul r11;edx:eax 
  ;add carry
  !add rdx,rcx
  !add rdx,[rsi+offsetC]
@@ -106,9 +106,9 @@ Macro madhicc(offsetB, offsetC)
 EndMacro
 
 Macro madlo(offsetB, offsetC)  
- !mov rbx, [rdi+offsetB] 
+ !mov r11, [rdi+offsetB] 
  !mov rax,r10
- !mul rbx 
+ !mul r11 
  !add rax,[rsi+offsetC]
  ;store carry
  !mov rcx,0
@@ -118,9 +118,9 @@ Macro madlo(offsetB, offsetC)
 EndMacro
 
 Macro madlocc(offsetB, offsetC)  
- !mov rbx, [rdi+offsetB] 
+ !mov r11, [rdi+offsetB] 
  !mov rax,r10
- !mul rbx 
+ !mul r11 
  ;add carry
  !add rax,rcx
  !add rax,[rsi+offsetC]
@@ -133,9 +133,9 @@ Macro madlocc(offsetB, offsetC)
 EndMacro
 
 Macro madhiccHIGH(offsetB, offsetHIGH) 
- !mov rbx, [rdi+offsetB] ;b
+ !mov r11, [rdi+offsetB] ;b
  !mov rax,r10;a
- !mul rbx;edx:eax 
+ !mul r11;edx:eax 
  ;add carry
  !add rdx,rcx
  !add rdx,[r8+offsetHIGH];high
@@ -148,9 +148,9 @@ Macro madhiccHIGH(offsetB, offsetHIGH)
 EndMacro
 
 Macro madloccHIGH(offsetB, offsetHIGH)  
- !mov rbx, [rdi+offsetB];b
+ !mov r11, [rdi+offsetB];b
  !mov rax,r10;a
- !mul rbx 
+ !mul r11 
  !add rax,rcx
  ;store carry
  !add rax,[r8+offsetHIGH]
@@ -163,9 +163,9 @@ Macro madloccHIGH(offsetB, offsetHIGH)
 EndMacro
 
 Macro madhiccHIGHZero(offsetB, offsetHIGH) 
- !mov rbx, [rdi+offsetB] ;b
+ !mov r11, [rdi+offsetB] ;b
  !mov rax,r10;a
- !mul rbx;edx:eax 
+ !mul r11;edx:eax 
  ;add carry
  !add rdx,rcx
  ;!add rdx,[r8+offsetHIGH];high first time HIGH shold be zero
@@ -187,7 +187,7 @@ Procedure m_deserializeX64(*a,b,*sptr,counter=8)
   Protected *ptr
     *ptr=*a+64*b  
   
-  !mov rbx,[p.p_ptr] 
+  !mov r11,[p.p_ptr] 
   !mov rdi,[p.p_sptr] 
   
   !mov rax,[p.v_counter]
@@ -195,7 +195,7 @@ Procedure m_deserializeX64(*a,b,*sptr,counter=8)
   !jz llm_MyLabelfexit ;if counter is zero break
   !dec rax
   !shl rax,2 ;*4
-  !add rbx,rax
+  !add r11,rax
   
   !xor cx,cx  
   !llm_MyLabelf:
@@ -300,9 +300,9 @@ Procedure m_deserializeX64(*a,b,*sptr,counter=8)
   !or dl,al  
   
   ;!ror rdx,8
-  !mov [rbx],edx
+  !mov [r11],edx
   !add rdi,8
-  !sub rbx,4
+  !sub r11,4
   
   
   !pop cx   
@@ -319,7 +319,7 @@ Procedure m_serializeX64(*a,b,*sptr,counter=8);>hex
  Protected *ptr
   *ptr=*a+32*b  
   
-  !mov rbx,[p.p_ptr] ;bin input
+  !mov r11,[p.p_ptr] ;bin input
   !mov rdi,[p.p_sptr] ;hex output
   
   !mov rax,[p.v_counter]
@@ -334,7 +334,7 @@ Procedure m_serializeX64(*a,b,*sptr,counter=8);>hex
   
   !push cx
   
-  !mov eax,[rbx]; get 4bytes>8hex digit
+  !mov eax,[r11]; get 4bytes>8hex digit
   !xor rdx,rdx ;4B each 2bhex = 8b total
   
   !mov ecx,eax
@@ -426,7 +426,7 @@ Procedure m_serializeX64(*a,b,*sptr,counter=8);>hex
   ;!ror edx,16
   !mov [rdi],rdx
   !sub rdi,8
-  !add rbx,4
+  !add r11,4
   
   !pop cx
   !inc cx
@@ -484,10 +484,10 @@ Procedure m_check_less_more_equilX64(*s,*t);len *8 byte 0 - s = t, 1- s < t, 2- 
   !llm_check_less_continue:
   
   !mov rax,[rsi]
-  !mov rbx,[rdi]
+  !mov r11,[rdi]
   !sub rsi,8
   !sub rdi,8 
-  !cmp rax,rbx
+  !cmp rax,r11
   !jb llm_check_less_exit_less
   !ja llm_check_less_exit_more  
   !inc cx 
@@ -515,10 +515,10 @@ Procedure m_check_equilX64(*s,*t)
   !llm_check_equil_continue:
   
   !mov rax,[rsi]
-  !mov rbx,[rdi]
+  !mov r11,[rdi]
   !add rsi,8
   !add rdi,8 
-  !cmp rax,rbx
+  !cmp rax,r11
   !jne llm_check_equil_exit_noteqil
   !inc cx 
   !cmp cx,4
@@ -587,16 +587,16 @@ EndProcedure
 Procedure m_Ecc_TestBitX64(*a, testbit)
   !mov rsi,[p.p_a]
   !xor rcx, rcx
-  !xor ebx, ebx
+  !xor r11d, r11d
   !xor rdx, rdx
   !mov dl,[p.v_testbit]
   !mov cl,dl
   !shr cl,6;//64  
-  !mov bl,cl  
+  !mov r11b,cl  
   !shl cl,3  
   !add rsi,rcx
-  !shl bl,6
-  !sub dl,bl
+  !shl r11b,6
+  !sub dl,r11b
   !mov rax,[rsi]
   !bt  rax,rdx
   !mov rax,0
@@ -607,45 +607,45 @@ EndProcedure
 Procedure m_Ecc_AndX64(*c, *a, *b)
   !mov rsi,[p.p_a]
   !mov rdi,[p.p_b]
-  !mov rbx,[p.p_c]
+  !mov r11,[p.p_c]
   
   !mov rax,[rsi]
   !and rax,[rdi]
-  !mov [rbx],rax
+  !mov [r11],rax
   
   !mov rax,[rsi+8]
   !and rax,[rdi+8]
-  !mov [rbx+8],rax
+  !mov [r11+8],rax
   
   !mov rax,[rsi+16]
   !and rax,[rdi+16]
-  !mov [rbx+16],rax
+  !mov [r11+16],rax
   
   !mov rax,[rsi+24]
   !and rax,[rdi+24]
-  !mov [rbx+24],rax  
+  !mov [r11+24],rax  
 EndProcedure
 
 Procedure m_Ecc_OrX64(*c, *a, *b)
   !mov rsi,[p.p_a]
   !mov rdi,[p.p_b]
-  !mov rbx,[p.p_c]
+  !mov r11,[p.p_c]
   
   !mov rax,[rsi]
   !or rax,[rdi]
-  !mov [rbx],rax
+  !mov [r11],rax
   
   !mov rax,[rsi+8]
   !or rax,[rdi+8]
-  !mov [rbx+8],rax
+  !mov [r11+8],rax
   
   !mov rax,[rsi+16]
   !or rax,[rdi+16]
-  !mov [rbx+16],rax
+  !mov [r11+16],rax
   
   !mov rax,[rsi+24]
   !or rax,[rdi+24]
-  !mov [rbx+24],rax  
+  !mov [r11+24],rax  
 EndProcedure
 
 Procedure m_Ecc_ClearMX64(*a)
@@ -725,8 +725,8 @@ Procedure m_NegModX64(*c,*a,*p)
 !mov rdx,[p.p_p]
 
 !mov rax,0
-!mov rbx,[rsi]
-!sub rax,rbx 
+!mov r11,[rsi]
+!sub rax,r11 
 ;store borrow
 !mov rcx,0
 !adc rcx,rcx
@@ -739,7 +739,7 @@ Procedure m_NegModX64(*c,*a,*p)
 
 
 !mov rax,0
-!mov rbx,[rsi+8]
+!mov r11,[rsi+8]
 ;add borrow
 !sub rax,rcx
 
@@ -747,7 +747,7 @@ Procedure m_NegModX64(*c,*a,*p)
 !mov rcx,0
 !adc rcx,rcx
 
-!sub rax,rbx 
+!sub rax,r11 
 
 
 
@@ -761,7 +761,7 @@ Procedure m_NegModX64(*c,*a,*p)
 
 
 !mov rax,0
-!mov rbx,[rsi+16]
+!mov r11,[rsi+16]
 ;add borrow
 !sub rax,rcx
 
@@ -769,7 +769,7 @@ Procedure m_NegModX64(*c,*a,*p)
 !mov rcx,0
 !adc rcx,rcx
 
-!sub rax,rbx 
+!sub rax,r11 
 
 
 
@@ -783,10 +783,10 @@ Procedure m_NegModX64(*c,*a,*p)
 
 
 !mov rax,0
-!mov rbx,[rsi+24]
+!mov r11,[rsi+24]
 ;add borrow
 !sub rax,rcx
-!sub rax,rbx 
+!sub rax,r11 
 
 ;add carry
 !add rax,r8
@@ -983,10 +983,10 @@ Procedure m_addModX64(*c,*a,*b,*p)
   !ll_addMod_check_less_continue:
   
   !mov rax,[rsi]
-  !mov rbx,[rdi]
+  !mov r11,[rdi]
   !sub rsi,8
   !sub rdi,8 
-  !cmp rax,rbx
+  !cmp rax,r11
   !jb ll_addMod_check_less_exit_less
   !ja ll_addMod_check_less_exit_more  
   !inc cx 
@@ -1041,7 +1041,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;m_Ecc_ClearMX64(*r512+32)
   *tt=*r512+64
     
-  !mov rbx,[p.p_tt]
+  !mov r11,[p.p_tt]
   !mov rdi, [p.p_a]  
   !mov rsi,[p.p_r512]
  
@@ -1104,7 +1104,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   
   !mov rax,[rdi+0];a0
   !mul r8; a0*b1>t[0]
-  !mov [rbx+0], rax;t[0]
+  !mov [r11+0], rax;t[0]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+8];a1
@@ -1114,7 +1114,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+16];a2
@@ -1125,7 +1125,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rdi+24];a3
@@ -1136,35 +1136,35 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   !mov rax,[rsi+8];r512[1]
-  !add rax,[rbx+0]; r512[1]+t[0]>r512[1]
+  !add rax,[r11+0]; r512[1]+t[0]>r512[1]
   !mov [rsi+8],rax
   
   !mov rax,[rsi+16];r512[2]
-  !adc rax,[rbx+8]; r512[2]+t[1]>r512[2]
+  !adc rax,[r11+8]; r512[2]+t[1]>r512[2]
   !mov [rsi+16],rax
   
   !mov rax,[rsi+24];r512[3]
-  !adc rax,[rbx+16]; r512[3]+t[2]>r512[3]
+  !adc rax,[r11+16]; r512[3]+t[2]>r512[3]
   !mov [rsi+24],rax
   
   !mov rax,[rsi+32];r512[4]
-  !adc rax,[rbx+24]; r512[4]+t[3]>r512[4]
+  !adc rax,[r11+24]; r512[4]+t[3]>r512[4]
   !mov [rsi+32],rax
   
   ;!mov rax,[rsi+40];r512[5]
   !mov rax,0
-  !adc rax,[rbx+32]; r512[5]+t[4]>r512[5]
+  !adc rax,[r11+32]; r512[5]+t[4]>r512[5]
   !mov [rsi+40],rax
   
   ;imm_umul A*B2
@@ -1174,7 +1174,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   
   !mov rax,[rdi+0];a0
   !mul r8; a0*b2>t[0]
-  !mov [rbx+0], rax;t[0]
+  !mov [r11+0], rax;t[0]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+8];a1
@@ -1184,7 +1184,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+16];a2
@@ -1195,7 +1195,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rdi+24];a3
@@ -1206,36 +1206,36 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   
   !mov rax,[rsi+16];r512[2]
-  !add rax,[rbx+0]; r512[2]+t[0]>r512[2]
+  !add rax,[r11+0]; r512[2]+t[0]>r512[2]
   !mov [rsi+16],rax
   
   !mov rax,[rsi+24];r512[3]
-  !adc rax,[rbx+8]; r512[3]+t[1]>r512[3]
+  !adc rax,[r11+8]; r512[3]+t[1]>r512[3]
   !mov [rsi+24],rax
   
   !mov rax,[rsi+32];r512[4]
-  !adc rax,[rbx+16]; r512[4]+t[2]>r512[4]
+  !adc rax,[r11+16]; r512[4]+t[2]>r512[4]
   !mov [rsi+32],rax
   
   !mov rax,[rsi+40];r512[5]
-  !adc rax,[rbx+24]; r512[5]+t[3]>r512[5]
+  !adc rax,[r11+24]; r512[5]+t[3]>r512[5]
   !mov [rsi+40],rax
   
   ;!mov rax,[rsi+48];r512[6]
   !mov rax,0
-  !adc rax,[rbx+32]; r512[6]+t[4]>r512[6]
+  !adc rax,[r11+32]; r512[6]+t[4]>r512[6]
   !mov [rsi+48],rax
   
   
@@ -1246,7 +1246,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   
   !mov rax,[rdi+0];a0
   !mul r8; a0*b3>t[0]
-  !mov [rbx+0], rax;t[0]
+  !mov [r11+0], rax;t[0]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+8];a1
@@ -1256,7 +1256,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rdi+16];a2
@@ -1267,7 +1267,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rdi+24];a3
@@ -1278,36 +1278,36 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   
   !mov rax,[rsi+24];r512[3]
-  !add rax,[rbx+0]; r512[3]+t[0]>r512[3]
+  !add rax,[r11+0]; r512[3]+t[0]>r512[3]
   !mov [rsi+24],rax
   
   !mov rax,[rsi+32];r512[4]
-  !adc rax,[rbx+8]; r512[4]+t[1]>r512[4]
+  !adc rax,[r11+8]; r512[4]+t[1]>r512[4]
   !mov [rsi+32],rax
   
   !mov rax,[rsi+40];r512[5]
-  !adc rax,[rbx+16]; r512[5]+t[2]>r512[5]
+  !adc rax,[r11+16]; r512[5]+t[2]>r512[5]
   !mov [rsi+40],rax
   
   !mov rax,[rsi+48];r512[6]
-  !adc rax,[rbx+24]; r512[6]+t[3]>r512[6]
+  !adc rax,[r11+24]; r512[6]+t[3]>r512[6]
   !mov [rsi+48],rax
   
   ;!mov rax,[rsi+56];r512[7]
   !mov rax,0
-  !adc rax,[rbx+32]; r512[7]+t[4]>r512[7]
+  !adc rax,[r11+32]; r512[7]+t[4]>r512[7]
   !mov [rsi+56],rax
   
   ; At this point we have 16 32-bit words representing a 512-bit value
@@ -1335,7 +1335,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   
   !mov rax,[rsi+32]
   !mul r8; *1000003D1h>t[0]
-  !mov [rbx+0], rax;
+  !mov [r11+0], rax;
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+40]
@@ -1345,7 +1345,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+48]
@@ -1356,7 +1356,7 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rsi+56]
@@ -1367,37 +1367,37 @@ Procedure m_mulModX64(*res,*a,*b,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   
   !mov rax,[rsi+0];r512[0]
-  !add rax, [rbx+0];512[0]+t[0]>512[0]
+  !add rax, [r11+0];512[0]+t[0]>512[0]
   !mov [rsi+0],rax;r512[0]
   
   !mov rax,[rsi+8];r512[1]
-  !adc rax,[rbx+8];512[1]+t[1]>512[1]
+  !adc rax,[r11+8];512[1]+t[1]>512[1]
   !mov [rsi+8],rax;r512[1]
   
   !mov rax,[rsi+16];r512[2]
-  !adc rax,[rbx+16];512[2]+t[2]>512[2]
+  !adc rax,[r11+16];512[2]+t[2]>512[2]
   !mov [rsi+16],rax;r512[2]
   
   !mov rax,[rsi+24];r512[3]
-  !adc rax,[rbx+24];512[3]+t[2]>512[3]
+  !adc rax,[r11+24];512[3]+t[2]>512[3]
   !mov [rsi+24],rax;r512[3]
   
   
   ;**Reduce from 320 to 256
   ;No overflow possible here t[4]+c<=0x1000003D1ULL  
-  !mov rax,[rbx+32];t[4]+carry
+  !mov rax,[r11+32];t[4]+carry
   !adc rax,0
   !mul r8; (t[4]+carry)*1000003D1h>rax>u10 rdx>u11
   
@@ -1529,15 +1529,15 @@ Procedure m_mulModX64v2(*res,*a,*b,*p, *high)
   ;Store high[6] And high[7] since they will be overwritten
   ;**Reduce from 512 to 320
   
-  !mov rbx, rsi
-  !add rbx,64
+  !mov r11, rsi
+  !add r11,64
   !mov r8, 0x1000003D1
   
   ;imm_umul
   
   !mov rax,[rsi+32]
   !mul r8; *1000003D1h>t[0]
-  !mov [rbx+0], rax;
+  !mov [r11+0], rax;
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+40]
@@ -1547,7 +1547,7 @@ Procedure m_mulModX64v2(*res,*a,*b,*p, *high)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+48]
@@ -1558,7 +1558,7 @@ Procedure m_mulModX64v2(*res,*a,*b,*p, *high)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rsi+56]
@@ -1569,37 +1569,37 @@ Procedure m_mulModX64v2(*res,*a,*b,*p, *high)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   
   !mov rax,[rsi+0];r512[0]
-  !add rax, [rbx+0];512[0]+t[0]>512[0]
+  !add rax, [r11+0];512[0]+t[0]>512[0]
   !mov [rsi+0],rax;r512[0]
   
   !mov rax,[rsi+8];r512[1]
-  !adc rax,[rbx+8];512[1]+t[1]>512[1]
+  !adc rax,[r11+8];512[1]+t[1]>512[1]
   !mov [rsi+8],rax;r512[1]
   
   !mov rax,[rsi+16];r512[2]
-  !adc rax,[rbx+16];512[2]+t[2]>512[2]
+  !adc rax,[r11+16];512[2]+t[2]>512[2]
   !mov [rsi+16],rax;r512[2]
   
   !mov rax,[rsi+24];r512[3]
-  !adc rax,[rbx+24];512[3]+t[2]>512[3]
+  !adc rax,[r11+24];512[3]+t[2]>512[3]
   !mov [rsi+24],rax;r512[3]
   
   
   ;**Reduce from 320 to 256
   ;No overflow possible here t[4]+c<=0x1000003D1ULL  
-  !mov rax,[rbx+32];t[4]+carry
+  !mov rax,[r11+32];t[4]+carry
   !adc rax,0
   !mul r8; (t[4]+carry)*1000003D1h>rax>u10 rdx>u11
   
@@ -1780,18 +1780,18 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   ;Take high 256 bits, multiply by 977, add To low 256 bits
   ;That is, take high[0 ... 5], high6, high7, multiply by 977 And add To c[0 ... 7]
     
-  !mov ebx, r9d ;hightemp7
+  !mov r11d, r9d ;hightemp7
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   !add eax,[rsi+0];c7
   ;store carry
   !mov ecx,0
   !adc ecx, ecx 
   !mov [rsi+0], eax
   
-  !mov ebx, r8d
+  !mov r11d, r8d
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+4];c6
@@ -1801,9 +1801,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !mov [rsi+4], eax;c6
   
    ;madlocc
-  !mov ebx, [rdi+8] ;high5
+  !mov r11d, [rdi+8] ;high5
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+8] 
@@ -1812,9 +1812,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+8], eax;c5
   
-  !mov ebx, [rdi+12] ;high4
+  !mov r11d, [rdi+12] ;high4
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+12] 
@@ -1823,9 +1823,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+12], eax;c4
   
-  !mov ebx, [rdi+16] ;high3
+  !mov r11d, [rdi+16] ;high3
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+16] 
@@ -1834,9 +1834,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+16], eax;c3
   
-  !mov ebx, [rdi+20] ;high2
+  !mov r11d, [rdi+20] ;high2
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+20] 
@@ -1845,9 +1845,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+20], eax;c2
   
-  !mov ebx, [rdi+24] ;high1
+  !mov r11d, [rdi+24] ;high1
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+24] 
@@ -1856,9 +1856,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+24], eax;c1
   
-  !mov ebx, [rdi+28] ;high0
+  !mov r11d, [rdi+28] ;high0
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+28] 
@@ -1892,18 +1892,18 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   
   ;Debug "low :"+m_gethex32(*c)
   ;End
-  !mov ebx, r9d ;hightemp7
+  !mov r11d, r9d ;hightemp7
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   !add edx,[rsi+4] ;c6
   ;store carry
   !mov ecx,0
   !adc ecx, ecx 
   !mov [rsi+4], edx ;c6  
   
-  !mov ebx, r8d
+  !mov r11d, r8d
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+8] ;c5
@@ -1913,9 +1913,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !mov [rsi+8], edx ;c5
   
   ;madhighcc
-  !mov ebx, [rdi+8]; high5
+  !mov r11d, [rdi+8]; high5
   !mov eax,977
-  !mul ebx;edx:eax 
+  !mul r11d;edx:eax 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+12] 
@@ -1924,9 +1924,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+12], edx;c4
   
-  !mov ebx, [rdi+12]; high4
+  !mov r11d, [rdi+12]; high4
   !mov eax,977
-  !mul ebx;edx:eax 
+  !mul r11d;edx:eax 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+16] 
@@ -1935,9 +1935,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+16], edx;c3
   
-  !mov ebx, [rdi+16]; high3
+  !mov r11d, [rdi+16]; high3
   !mov eax,977
-  !mul ebx;edx:eax 
+  !mul r11d;edx:eax 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+20] 
@@ -1946,9 +1946,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+20], edx;c2
   
-  !mov ebx, [rdi+20]; high2
+  !mov r11d, [rdi+20]; high2
   !mov eax,977
-  !mul ebx;edx:eax 
+  !mul r11d;edx:eax 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+24] 
@@ -1957,9 +1957,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !adc ecx, ecx 
   !mov [rsi+24], edx;c1
   
-  !mov ebx, [rdi+24]; high1
+  !mov r11d, [rdi+24]; high1
   !mov eax,977
-  !mul ebx;edx:eax 
+  !mul r11d;edx:eax 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+28] 
@@ -1969,9 +1969,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !mov [rsi+28], edx;c0
  
   
-  !mov ebx, [rdi+28];high0
+  !mov r11d, [rdi+28];high0
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add edx,ecx
   !add edx,[rdi+0];high7
@@ -2035,9 +2035,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   ;Debug "low :"+m_gethex32(*c)
   ;End
   ;Take the high 64 bits, multiply by 977 and add to the low 256 bits
-  !mov ebx, r9d ;hightemp7
+  !mov r11d, r9d ;hightemp7
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   !add eax,[rsi+0];c7
   ;store carry
   !mov ecx,0
@@ -2045,9 +2045,9 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   !mov [rsi+0], eax
   
   
-  !mov ebx, r8d
+  !mov r11d, r8d
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add eax,ecx
   !add eax,[rsi+4];c6  
@@ -2091,18 +2091,18 @@ Procedure m_mulModX64v1(*res,*a,*b,*p, *high)
   ;success!!!
   ;Debug "low :"+m_gethex32(*c)
   ;End
-  !mov ebx, r9d ;hightemp7
+  !mov r11d, r9d ;hightemp7
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   !add edx,[rsi+4] ;c6
   ;store carry
   !mov ecx,0
   !adc ecx, ecx 
   !mov [rsi+4], edx ;c6
 
-  !mov ebx, r8d
+  !mov r11d, r8d
   !mov eax,977
-  !mul ebx 
+  !mul r11d 
   ;add carry
   !add edx,ecx
   !add edx,[rsi+8] ;c5  
@@ -2165,7 +2165,7 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   
   *tt=*r512+64
     
-  !mov rbx,[p.p_tt]
+  !mov r11,[p.p_tt]
   !mov rdi, [p.p_a]  
   !mov rsi,[p.p_r512]
     
@@ -2174,7 +2174,7 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov r8, rax;store a0
   !mul rax ;a0>>rax>512[0] rdx>t[1]
   !mov [rsi], rax;low>512[0]
-  !mov [rbx+8], rdx;high>t[1]
+  !mov [r11+8], rdx;high>t[1]
   ;**K=1
   !mov rax, r8;a0
   !mul qword[rdi+8];a1>>rax>t[3] rdx>t[4]  
@@ -2185,11 +2185,11 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rcx,0
   !adc rcx, rcx ;t1 
   
-  !add rax,[rbx+8];t[3]+t[1]>t[3]
-  !mov [rbx+24], rax;t[3]
+  !add rax,[r11+8];t[3]+t[1]>t[3]
+  !mov [r11+24], rax;t[3]
   
   !adc rdx, 0;t[4]+0>t[4]
-  !mov [rbx+32], rdx;t[4]
+  !mov [r11+32], rdx;t[4]
   
   !adc rcx, 0
   !mov r9, rcx;t1  
@@ -2201,10 +2201,10 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mul qword [rdi+16];a2>>rax>t[0] rdx>t[1]
   
   !add rax,rax;t[0]+t[0]>t[0]
-  !mov [rbx+0], rax;t[0]
+  !mov [r11+0], rax;t[0]
   
   !adc rdx, rdx;t[1]+t[1]>t[1]
-  !mov [rbx+8], rdx;t[1]
+  !mov [r11+8], rdx;t[1]
   
   ;store carry
   !mov rcx,0
@@ -2213,18 +2213,18 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rax, [rdi+8];a1
   !mul rax ;a1>>rax>u10 rdx>u11
   
-  !add rax,[rbx+0];u10+t[0]>t[0] 
+  !add rax,[r11+0];u10+t[0]>t[0] 
   
-  !adc rdx, [rbx+8];u11+t[1]>t[1]  
+  !adc rdx, [r11+8];u11+t[1]>t[1]  
   
   !adc rcx, 0;t2 
   
   
-  !add rax,[rbx+32];t[0]+t[4]>t[0]
-  !mov [rbx+0], rax;t[0]
+  !add rax,[r11+32];t[0]+t[4]>t[0]
+  !mov [r11+0], rax;t[0]
   
   !adc rdx, r9;t[1]+t1>t[1]
-  !mov [rbx+8], rdx;t[1]
+  !mov [r11+8], rdx;t[1]
   
   !adc rcx, 0
   !mov r9, rcx;t2  
@@ -2233,16 +2233,16 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   ;**K=3
   !mov rax, r8;a0
   !mul qword [rdi+24];a3>>rax>t[3] rdx>t[4]
-  !mov [rbx+24], rax;t[3]
-  !mov [rbx+32], rdx;t[4]
+  !mov [r11+24], rax;t[3]
+  !mov [r11+32], rdx;t[4]
   
   !mov rax, [rdi+8];a1
   !mov r8,rax;store a1
   !mul qword [rdi+16];a2>>rax>u10 rdx>u11
   
-  !add rax,[rbx+24];u10+t[3]>t[3] 
+  !add rax,[r11+24];u10+t[3]>t[3] 
   
-  !adc rdx, [rbx+32];u11+t[4]>t[4]
+  !adc rdx, [r11+32];u11+t[4]>t[4]
   
   ;store carry
   !mov rcx,0
@@ -2257,11 +2257,11 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   
   !adc rcx, 0;t1
   
-  !add rax,[rbx+8];t[3]+t[1]>t[3]
-  !mov [rbx+24], rax;t[3]
+  !add rax,[r11+8];t[3]+t[1]>t[3]
+  !mov [r11+24], rax;t[3]
   
   !adc rdx,r9;t[4]+t2>t[4]
-  !mov [rbx+32], rdx;t[4]
+  !mov [r11+32], rdx;t[4]
   
   !adc rcx, 0;t1
   !mov r9, rcx;t1  
@@ -2271,10 +2271,10 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rax, r8;a1
   !mul qword [rdi+24];a3>>rax>t[0] rdx>t[1]
   !add rax,rax;t[0]+t[0]>t[0] 
-  !mov [rbx+0], rax;t[0]
+  !mov [r11+0], rax;t[0]
   
   !adc rdx,rdx;t[1]+t[1]>t[1]
-  !mov [rbx+8], rdx;t[1]
+  !mov [r11+8], rdx;t[1]
   
   ;store carry
   !mov rcx,0
@@ -2283,18 +2283,18 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rax,[rdi+16];a2
   !mov r8,rax;store a2
   !mul rax;a2>>rax>u10 rdx>u11
-  !add rax,[rbx+0];u10+t[0]>t[0]  
+  !add rax,[r11+0];u10+t[0]>t[0]  
   
-  !adc rdx,[rbx+8];u11+t[1]>t[1]
+  !adc rdx,[r11+8];u11+t[1]>t[1]
   
   
   !adc rcx, 0;t2
   
-  !add rax,[rbx+32];t[0]+t[4]>t[0] 
-  !mov [rbx+0], rax;t[0]
+  !add rax,[r11+32];t[0]+t[4]>t[0] 
+  !mov [r11+0], rax;t[0]
   
   !adc rdx,r9;t[1]+t1>t[1]
-  !mov [rbx+8], rdx;t[1]
+  !mov [r11+8], rdx;t[1]
   
   !adc rcx, 0;t2
   !mov r9, rcx;t2  
@@ -2311,11 +2311,11 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rcx,0
   !adc rcx, 0;t1
   
-  !add rax,[rbx+8];t[3]+t[1]>t[3] 
-  !mov [rbx+24], rax;t[3]
+  !add rax,[r11+8];t[3]+t[1]>t[3] 
+  !mov [r11+24], rax;t[3]
   
   !adc rdx,r9;t[4]+t2>t[4]
-  !mov [rbx+32], rdx;t[4]
+  !mov [r11+32], rdx;t[4]
   
   !adc rcx, 0;t1
   !mov r9, rcx;t1  
@@ -2325,11 +2325,11 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   !mov rax,[rdi+24];a3
   !mul rax;a3>>rax>t[0] rdx>t[1]
   
-  !add rax,[rbx+32];t[0]+t[4]>t[0] 
-  !mov [rbx+0], rax;t[0]
+  !add rax,[r11+32];t[0]+t[4]>t[0] 
+  !mov [r11+0], rax;t[0]
   
   !adc rdx,r9;t[1]+t1>t[1]
-  !mov [rbx+8], rdx;t[1]
+  !mov [r11+8], rdx;t[1]
   
   !mov [rsi+48], rax;r512[6] = t[0]
   
@@ -2349,7 +2349,7 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   
   !mov rax,[rsi+32]
   !mul r8; *1000003D1h>t[0]
-  !mov [rbx+0], rax;
+  !mov [r11+0], rax;
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+40]
@@ -2359,7 +2359,7 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+8], rax;t[1]
+  !mov [r11+8], rax;t[1]
   !mov rcx,rdx;carry
   
   !mov rax,[rsi+48]
@@ -2370,7 +2370,7 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+16], rax;t[2]
+  !mov [r11+16], rax;t[2]
   !mov rcx,rdx;carry  
   
   !mov rax,[rsi+56]
@@ -2381,37 +2381,37 @@ Procedure m_squareModX64(*res,*a,*p, *r512)
   ;store cf
   !mov r9,0
   !adc r9,0 
-  !mov [rbx+24], rax;t[3]
+  !mov [r11+24], rax;t[3]
   !mov rcx,rdx;carry
   
   !mov rax,0
   ;add cf
   !add rax,r9
   !adc rax, rcx  
-  !mov [rbx+32], rax;t[4]
+  !mov [r11+32], rax;t[4]
   ;end imm_umul
   
   
   !mov rax,[rsi+0];r512[0]
-  !add rax, [rbx+0];512[0]+t[0]>512[0]
+  !add rax, [r11+0];512[0]+t[0]>512[0]
   !mov [rsi+0],rax;r512[0]
   
   !mov rax,[rsi+8];r512[1]
-  !adc rax,[rbx+8];512[1]+t[1]>512[1]
+  !adc rax,[r11+8];512[1]+t[1]>512[1]
   !mov [rsi+8],rax;r512[1]
   
   !mov rax,[rsi+16];r512[2]
-  !adc rax,[rbx+16];512[2]+t[2]>512[2]
+  !adc rax,[r11+16];512[2]+t[2]>512[2]
   !mov [rsi+16],rax;r512[2]
   
   !mov rax,[rsi+24];r512[3]
-  !adc rax,[rbx+24];512[3]+t[2]>512[3]
+  !adc rax,[r11+24];512[3]+t[2]>512[3]
   !mov [rsi+24],rax;r512[3]
   
   
   ;**Reduce from 320 to 256
   ;No overflow possible here t[4]+c<=0x1000003D1ULL  
-  !mov rax,[rbx+32];t[4]+carry
+  !mov rax,[r11+32];t[4]+carry
   !adc rax,0
   !mul r8; (t[4]+carry)*1000003D1h>rax>u10 rdx>u11
   
