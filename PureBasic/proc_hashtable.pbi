@@ -457,7 +457,11 @@ Procedure HashTableInsert(*hash, position)
   offset = hashcut*#Pointersz
   If sz = 0
      
-    *contentpointer = HeapAlloc_(HTHeaps(hashcut & 255), 0, #HashTableSizeItems * initHTsize)
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      *contentpointer = HeapAlloc_(HTHeaps(hashcut & 255), 0, #HashTableSizeItems * initHTsize)
+    CompilerElse
+      *contentpointer = AllocateMemory(#HashTableSizeItems * initHTsize)
+    CompilerEndIf
     If Not *contentpointer     
       exit("  Nao foi possivel alocar memoria in Heap")
     EndIf
@@ -475,7 +479,11 @@ Procedure HashTableInsert(*hash, position)
     ;PrintN("Need realocate")
     *contentpointer = PeekI(*PointerTable+offset)
     If sz>=initHTsize
-      *contentpointer = HeapReAlloc_(HTHeaps(hashcut & 255), 0, *contentpointer, (sz+1)*#HashTableSizeItems)
+      CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+        *contentpointer = HeapReAlloc_(HTHeaps(hashcut & 255), 0, *contentpointer, (sz+1)*#HashTableSizeItems)
+      CompilerElse
+        *contentpointer = ReAllocateMemory(*contentpointer, (sz+1)*#HashTableSizeItems)
+      CompilerEndIf
       If Not *contentpointer     
         exit("  Can`t reallocate memory in Heap")
       EndIf      
@@ -553,7 +561,12 @@ EndProcedure
 
   
   For i = 0 To 255
-    HTHeaps(i) = HeapCreate_(0, 0, 0)
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      HTHeaps(i) = HeapCreate_(0, 0, 0)
+    CompilerElse
+      HTHeaps(i) = 1 ; Dummy for Linux, as we use native AllocateMemory
+    CompilerEndIf
+    HTMutex(i) = CreateMutex()
   Next i
 Procedure GenHashTable()
   Protected i, num_threads, items_per_thread, *p.GenHT_Param, sum.q, persent.i
@@ -912,14 +925,25 @@ Procedure checkWholeHashTableContentPack(*arr)
 
  Procedure RemoveTempHashTable()   
   Protected i
-  Shared *Table_unalign, *PointerTable_unalign, HTHeaps()
+  Shared *Table_unalign, *PointerTable_unalign, HTHeaps(), *PointerTable, HT_items
   
   PrintN(L("dest_heaps"))
-  For i = 0 To 255
-    If HTHeaps(i)
-      HeapDestroy_(HTHeaps(i))
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    For i = 0 To 255
+      If HTHeaps(i)
+        HeapDestroy_(HTHeaps(i))
+      EndIf
+    Next i
+  CompilerElse
+    If *PointerTable
+      For i = 0 To HT_items - 1
+        Protected *ptr = PeekI(*PointerTable + i*#Pointersz)
+        If *ptr
+          FreeMemory(*ptr)
+        EndIf
+      Next i
     EndIf
-  Next i
+  CompilerEndIf
   
   FreeMemory(*Table_unalign) 
   FreeMemory(*PointerTable_unalign) 

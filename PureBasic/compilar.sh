@@ -1,38 +1,30 @@
 #!/bin/bash
-echo "=========================================="
-echo "      Compilador Jacazul - Collider (Linux)"
-echo "=========================================="
-echo ""
-read -p "Digite o nome do executavel (ex: Collider_BR10) ou de enter para 'Collider_BR': " OUT_NAME
 
-if [ -z "$OUT_NAME" ]; then
-    OUT_NAME="Collider_BR"
+echo "Compilando Collider para Linux..."
+
+# Path do compilador do PureBasic (ajuste conforme sua instalação no Linux)
+# Por padrão assumimos que o PUREBASIC_HOME está definido ou o compilar está na pasta
+PB_COMPILER="${PUREBASIC_HOME:-/usr/share/purebasic}/compilers/pbcompiler"
+
+if [ ! -f "$PB_COMPILER" ]; then
+    echo "Erro: Compilador do PureBasic não encontrado em $PB_COMPILER"
+    echo "Defina a variável PUREBASIC_HOME apontando para a pasta raiz do PureBasic."
+    exit 1
 fi
 
-PB_COMPILER="pbcompiler"
+# Cria um fake GCC para forçar o -no-pie (Corrige erros de R_X86_64_PC32 em distribuições modernas)
+mkdir -p .tmp_gcc
+echo '#!/bin/bash' > .tmp_gcc/gcc
+echo '/usr/bin/gcc -no-pie -z execstack "$@"' >> .tmp_gcc/gcc
+chmod +x .tmp_gcc/gcc
 
-if ! command -v $PB_COMPILER &> /dev/null
-then
-    if [ -f "/opt/purebasic/compilers/pbcompiler" ]; then
-        PB_COMPILER="/opt/purebasic/compilers/pbcompiler"
-    else
-        echo "[ERRO] O pbcompiler nao foi encontrado!"
-        echo "Adicione o PureBasic ao seu PATH ou edite este script."
-        exit 1
-    fi
-fi
+# Adiciona o fake_gcc ao PATH temporariamente
+export PATH="$(pwd)/.tmp_gcc:$PATH"
 
-echo ""
-echo "[INFO] Compilando Collider.pb para -> ../x64/$OUT_NAME"
-echo "[INFO] Usando compilador: $PB_COMPILER"
-echo ""
+# Compila o arquivo
+"$PB_COMPILER" Collider.pb -e ../x64/Collider_Linux -t -c
 
-$PB_COMPILER Collider.pb -e "../x64/$OUT_NAME" -t -c
+# Limpa o workaround
+rm -rf .tmp_gcc
 
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "[SUCESSO] $OUT_NAME compilado e pronto pro abate!"
-else
-    echo ""
-    echo "[ERRO] A compilacao falhou. De uma olhada no console acima."
-fi
+echo "Compilação concluída! Executável gerado em ../x64/Collider_Linux"

@@ -60,8 +60,8 @@ Module Curve
   
   
 Macro move16b_1(offset_target_s,offset_target_d)  
-  !movdqa xmm0,[rdx++offset_target_s]
-  !movdqa [rcx+offset_target_d],xmm0
+  !movdqu xmm0,[rdx++offset_target_s]
+  !movdqu [rcx+offset_target_d],xmm0
 EndMacro
 
 Macro move32b_(s,d,offset_target_s,offset_target_d)
