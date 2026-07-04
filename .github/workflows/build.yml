@@ -63,15 +63,26 @@ jobs:
           gcc -shared -fPIC -Wl,-soname,libcuda.so.1 -o "$RUNNER_TEMP/cudastub/libcuda.so" cuda_stub.c
           echo "LIBRARY_PATH=$RUNNER_TEMP/cudastub" >> "$GITHUB_ENV"
 
-      - name: Build (compilar.sh)
-        working-directory: PureBasic
+      - name: Build (pbcompiler)
         run: |
           set -euo pipefail
-          chmod +x compilar.sh
-          ./compilar.sh
+          # Свой gcc-wrapper вместо compilar.sh: помимо -no-pie -z execstack (нужно
+          # для R_X86_64_PC32 на современных дистрибутивах) добавляет --no-as-needed
+          # и -lcuda в КОНЕЦ строки линковки. Иначе линкер с дефолтным --as-needed
+          # отбрасывает libcuda (её -lcuda в команде pbcompiler стоит до объектников).
+          mkdir -p "$RUNNER_TEMP/fakegcc"
+          {
+            echo '#!/bin/bash'
+            echo "exec /usr/bin/gcc -no-pie -z execstack -Wl,--no-as-needed \"\$@\" -L$RUNNER_TEMP/cudastub -lcuda"
+          } > "$RUNNER_TEMP/fakegcc/gcc"
+          chmod +x "$RUNNER_TEMP/fakegcc/gcc"
+          export PATH="$RUNNER_TEMP/fakegcc:$PATH"
+          cd PureBasic
+          "$PUREBASIC_HOME/compilers/pbcompiler" Collider.pb -e ../x64/Collider_Linux -t -c
           test -f ../x64/Collider_Linux
           echo "=== Собранный бинарник ==="; ls -la ../x64/Collider_Linux
-          echo "=== Проверка зависимости от libcuda.so.1 ==="; readelf -d ../x64/Collider_Linux | grep -i cuda || true
+          echo "=== Зависимость от libcuda.so.1 (реальный драйвер на GPU-хосте) ==="
+          readelf -d ../x64/Collider_Linux | grep -i cuda || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
