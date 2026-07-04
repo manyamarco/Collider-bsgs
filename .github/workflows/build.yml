@@ -47,6 +47,22 @@ jobs:
           echo "PUREBASIC_HOME=$HOME/purebasic" >> "$GITHUB_ENV"
           test -f "$HOME/purebasic/compilers/pbcompiler"
 
+      - name: Build libcuda link-stub
+        run: |
+          set -euo pipefail
+          # Код линкуется с драйверной libcuda (ImportC "-lcuda"), а на раннере нет
+          # NVIDIA-драйвера. В CI бинарник только собирается, не запускается, поэтому
+          # генерируем пустую libcuda.so ЛОКАЛЬНО (без загрузок) — только чтобы линкер
+          # разрешил символы. SONAME = libcuda.so.1, как у настоящего драйвера, поэтому
+          # на машине с RTX 3080 подхватится реальная библиотека.
+          awk '/ImportC "-lcuda"/{f=1;next} /EndImport/{f=0} f' PureBasic/globals.pbi \
+            | grep -oE '^[[:space:]]*cu[A-Za-z0-9_]+' | tr -d '[:space:]' | sort -u > syms.txt
+          echo "CUDA symbols to stub:"; cat syms.txt
+          awk '{print "void " $0 "(void){}"}' syms.txt > cuda_stub.c
+          mkdir -p "$RUNNER_TEMP/cudastub"
+          gcc -shared -fPIC -Wl,-soname,libcuda.so.1 -o "$RUNNER_TEMP/cudastub/libcuda.so" cuda_stub.c
+          echo "LIBRARY_PATH=$RUNNER_TEMP/cudastub" >> "$GITHUB_ENV"
+
       - name: Build (compilar.sh)
         working-directory: PureBasic
         run: |
@@ -54,6 +70,8 @@ jobs:
           chmod +x compilar.sh
           ./compilar.sh
           test -f ../x64/Collider_Linux
+          echo "=== Собранный бинарник ==="; ls -la ../x64/Collider_Linux
+          echo "=== Проверка зависимости от libcuda.so.1 ==="; readelf -d ../x64/Collider_Linux | grep -i cuda || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
