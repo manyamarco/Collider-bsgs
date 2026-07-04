@@ -91,30 +91,54 @@ jobs:
           path: x64/Collider_Linux
           if-no-files-found: error
 
-  # Раскомментируйте, если нужен и Windows-бинарник. Windows-инсталлятор тоже лежит
-  # в репозитории зашифрованным (PureBasic_5_31_x64.exe.enc), тем же секретом PB_PASSPHRASE.
-  # Примечание: .exe — это ИНСТАЛЛЯТОР; шаг ниже его расшифровывает и запускает тихую
-  # установку. Проверьте флаг тихой установки для вашей версии PureBasic.
-  #
-  # build-windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Decrypt & install PureBasic
-  #       shell: bash
-  #       env:
-  #         PB_PASSPHRASE: ${{ secrets.PB_PASSPHRASE }}
-  #       run: |
-  #         openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
-  #           -in PureBasic_5_31_x64.exe.enc -out pb_setup.exe -pass env:PB_PASSPHRASE
-  #         ./pb_setup.exe /S /D=$USERPROFILE\\purebasic  # уточните тихий флаг инсталлятора
-  #     - name: Build
-  #       shell: cmd
-  #       working-directory: PureBasic
-  #       run: |
-  #         set "PUREBASIC_HOME=%USERPROFILE%\purebasic"
-  #         call compilar.bat
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: Collider_Windows
-  #         path: x64/Collider.exe
+  # Windows x64. Инсталлятор PureBasic лежит в репозитории зашифрованным
+  # (PureBasic_5_31_x64.exe.enc), тем же секретом PB_PASSPHRASE. Это Inno Setup —
+  # ставим тихо (/VERYSILENT). На Windows CUDA линкуется через PureBasic/lib/cuda.lib
+  # (import-lib для nvcuda.dll), которая уже в репозитории, поэтому stub не нужен.
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guard - secret present
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.PB_PASSPHRASE }}" ]; then
+            echo "::error::Задайте секрет PB_PASSPHRASE."
+            exit 1
+          fi
+
+      - name: Decrypt PureBasic installer
+        shell: bash
+        env:
+          PB_PASSPHRASE: ${{ secrets.PB_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in PureBasic_5_31_x64.exe.enc -out pb_setup.exe -pass env:PB_PASSPHRASE
+
+      - name: Silent install PureBasic (Inno Setup)
+        shell: pwsh
+        run: |
+          Start-Process -FilePath .\pb_setup.exe `
+            -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/DIR=C:\PureBasic' `
+            -Wait
+          if (-not (Test-Path 'C:\PureBasic\Compilers\pbcompiler.exe')) {
+            throw 'pbcompiler.exe не найден после установки — проверьте флаги установщика.'
+          }
+
+      - name: Build (pbcompiler)
+        shell: cmd
+        working-directory: PureBasic
+        run: |
+          "C:\PureBasic\Compilers\pbcompiler.exe" Collider.pb /EXE "..\x64\Collider.exe" /CONSOLE /THREAD
+          if not exist "..\x64\Collider.exe" exit /b 1
+          dir "..\x64\Collider.exe"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collider_Windows_x64
+          path: x64/Collider.exe
+          if-no-files-found: error
