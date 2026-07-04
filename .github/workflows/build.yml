@@ -1,0 +1,81 @@
+name: Build Collider-BSGS
+
+# Сборка требует коммерческого компилятора PureBasic (v5.31+), которого нет
+# в стандартных раннерах GitHub и нельзя поставить через apt. Поэтому раннер
+# скачивает ваш лицензионный дистрибутив PureBasic по приватной ссылке из
+# секрета репозитория PUREBASIC_URL (Settings -> Secrets and variables -> Actions).
+#
+# CUDA-ядро уже встроено в PureBasic/kernel_data.pbi, поэтому CUDA Toolkit / nvcc
+# для СБОРКИ не нужен. GPU на раннере тоже не нужен — но и запустить/протестировать
+# бинарник в CI нельзя (у раннеров нет видеокарты NVIDIA). CI = только сборка + артефакт.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'PureBasic/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guard - secret present
+        run: |
+          if [ -z "${{ secrets.PUREBASIC_URL }}" ]; then
+            echo "::error::Задайте секрет PUREBASIC_URL (прямая ссылка на .tar.xz дистрибутив PureBasic Linux x64)."
+            exit 1
+          fi
+
+      - name: Download & unpack PureBasic
+        run: |
+          set -euo pipefail
+          curl -fSL "${{ secrets.PUREBASIC_URL }}" -o pb.tar.xz
+          mkdir -p "$HOME/purebasic"
+          # --strip-components=1 убирает верхнюю папку архива (PureBasic_x64/...)
+          tar -xf pb.tar.xz -C "$HOME/purebasic" --strip-components=1
+          echo "PUREBASIC_HOME=$HOME/purebasic" >> "$GITHUB_ENV"
+          ls "$HOME/purebasic/compilers/pbcompiler"
+
+      - name: Build (compilar.sh)
+        working-directory: PureBasic
+        run: |
+          set -euo pipefail
+          chmod +x compilar.sh
+          ./compilar.sh
+          test -f ../x64/Collider_Linux
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collider_Linux
+          path: x64/Collider_Linux
+          if-no-files-found: error
+
+  # Раскомментируйте, если нужен и Windows-бинарник (нужен секрет PUREBASIC_URL_WIN
+  # со ссылкой на Windows-дистрибутив PureBasic .zip).
+  #
+  # build-windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Download & unpack PureBasic
+  #       shell: pwsh
+  #       run: |
+  #         if (-not "${{ secrets.PUREBASIC_URL_WIN }}") { throw "Set PUREBASIC_URL_WIN secret" }
+  #         Invoke-WebRequest "${{ secrets.PUREBASIC_URL_WIN }}" -OutFile pb.zip
+  #         Expand-Archive pb.zip -DestinationPath "$env:USERPROFILE\purebasic"
+  #     - name: Build
+  #       shell: cmd
+  #       working-directory: PureBasic
+  #       run: |
+  #         set "PUREBASIC_HOME=%USERPROFILE%\purebasic"
+  #         call compilar.bat
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: Collider_Windows
+  #         path: x64/Collider.exe
