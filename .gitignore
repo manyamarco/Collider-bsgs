@@ -1,0 +1,11 @@
+# Незашифрованные дистрибутивы PureBasic НЕ должны попадать в публичный репозиторий.
+# В репозитории хранятся только *.enc (зашифрованы, расшифровка секретом PB_PASSPHRASE).
+PureBasic_5_31_x64.tgz
+PureBasic_5_31_x64.exe
+*.tgz
+*.exe.plain
+
+# Рантайм-артефакты
+PureBasic/.tmp_gcc/
+x64/currentwork.txt
+*_error_log.txt

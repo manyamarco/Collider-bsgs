@@ -1,9 +1,10 @@
 name: Build Collider-BSGS
 
 # Сборка требует коммерческого компилятора PureBasic (v5.31+), которого нет
-# в стандартных раннерах GitHub и нельзя поставить через apt. Поэтому раннер
-# скачивает ваш лицензионный дистрибутив PureBasic по приватной ссылке из
-# секрета репозитория PUREBASIC_URL (Settings -> Secrets and variables -> Actions).
+# в стандартных раннерах GitHub и нельзя поставить через apt. Дистрибутив хранится
+# в самом репозитории в ЗАШИФРОВАННОМ виде (PureBasic_5_31_x64.tgz.enc, AES-256).
+# Раннер расшифровывает его локально паролем из секрета PB_PASSPHRASE
+# (Settings -> Secrets and variables -> Actions). Никаких обращений вовне нет.
 #
 # CUDA-ядро уже встроено в PureBasic/kernel_data.pbi, поэтому CUDA Toolkit / nvcc
 # для СБОРКИ не нужен. GPU на раннере тоже не нужен — но и запустить/протестировать
@@ -26,20 +27,25 @@ jobs:
 
       - name: Guard - secret present
         run: |
-          if [ -z "${{ secrets.PUREBASIC_URL }}" ]; then
-            echo "::error::Задайте секрет PUREBASIC_URL (прямая ссылка на .tar.xz дистрибутив PureBasic Linux x64)."
+          if [ -z "${{ secrets.PB_PASSPHRASE }}" ]; then
+            echo "::error::Задайте секрет PB_PASSPHRASE (пароль расшифровки PureBasic_5_31_x64.tgz.enc)."
             exit 1
           fi
 
-      - name: Download & unpack PureBasic
+      - name: Decrypt & unpack PureBasic
+        env:
+          PB_PASSPHRASE: ${{ secrets.PB_PASSPHRASE }}
         run: |
           set -euo pipefail
-          curl -fSL "${{ secrets.PUREBASIC_URL }}" -o pb.tar.xz
+          # Локальная расшифровка закоммиченного архива — без обращений вовне.
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in PureBasic_5_31_x64.tgz.enc -out pb.tgz -pass env:PB_PASSPHRASE
           mkdir -p "$HOME/purebasic"
-          # --strip-components=1 убирает верхнюю папку архива (PureBasic_x64/...)
-          tar -xf pb.tar.xz -C "$HOME/purebasic" --strip-components=1
+          # Архив содержит верхнюю папку purebasic/ -> --strip-components=1
+          tar -xzf pb.tgz -C "$HOME/purebasic" --strip-components=1
+          rm -f pb.tgz
           echo "PUREBASIC_HOME=$HOME/purebasic" >> "$GITHUB_ENV"
-          ls "$HOME/purebasic/compilers/pbcompiler"
+          test -f "$HOME/purebasic/compilers/pbcompiler"
 
       - name: Build (compilar.sh)
         working-directory: PureBasic
@@ -56,19 +62,23 @@ jobs:
           path: x64/Collider_Linux
           if-no-files-found: error
 
-  # Раскомментируйте, если нужен и Windows-бинарник (нужен секрет PUREBASIC_URL_WIN
-  # со ссылкой на Windows-дистрибутив PureBasic .zip).
+  # Раскомментируйте, если нужен и Windows-бинарник. Windows-инсталлятор тоже лежит
+  # в репозитории зашифрованным (PureBasic_5_31_x64.exe.enc), тем же секретом PB_PASSPHRASE.
+  # Примечание: .exe — это ИНСТАЛЛЯТОР; шаг ниже его расшифровывает и запускает тихую
+  # установку. Проверьте флаг тихой установки для вашей версии PureBasic.
   #
   # build-windows:
   #   runs-on: windows-latest
   #   steps:
   #     - uses: actions/checkout@v4
-  #     - name: Download & unpack PureBasic
-  #       shell: pwsh
+  #     - name: Decrypt & install PureBasic
+  #       shell: bash
+  #       env:
+  #         PB_PASSPHRASE: ${{ secrets.PB_PASSPHRASE }}
   #       run: |
-  #         if (-not "${{ secrets.PUREBASIC_URL_WIN }}") { throw "Set PUREBASIC_URL_WIN secret" }
-  #         Invoke-WebRequest "${{ secrets.PUREBASIC_URL_WIN }}" -OutFile pb.zip
-  #         Expand-Archive pb.zip -DestinationPath "$env:USERPROFILE\purebasic"
+  #         openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  #           -in PureBasic_5_31_x64.exe.enc -out pb_setup.exe -pass env:PB_PASSPHRASE
+  #         ./pb_setup.exe /S /D=$USERPROFILE\\purebasic  # уточните тихий флаг инсталлятора
   #     - name: Build
   #       shell: cmd
   #       working-directory: PureBasic
