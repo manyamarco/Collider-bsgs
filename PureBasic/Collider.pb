@@ -194,6 +194,9 @@ If pparam &1=1
 If pubfile$ And FileSize(pubfile$)=-1
   exit("  File["+pubfile$+"] not found!")
 EndIf
+If binfile$ And FileSize(binfile$)=-1
+  exit("  File["+binfile$+"] not found!")
+EndIf
 
 
 
@@ -476,22 +479,48 @@ Curve::m_subModX64(PubkeyBIG\y,*CurveP,PubkeyBIG\y,*CurveP)
 
 
 ;----------
-If pubfile$="" And mainpub
+If mainpub And pubfile$="" And binfile$=""
+  ; одиночный ключ (-pb): держим в списке (mode 0)
   AddElement(publist())
   publist()=mainpub
+  g_inmode = 0
+  ResetList(publist())
 ElseIf pubfile$
-  If ReadFile(0, pubfile$)   
-    While Eof(0) = 0         
-      AddElement(publist())
-      publist() = ReadString(0)      
-    Wend
-    CloseFile(0)               
-  Else
-    exit("  Couldn't open the file["+pubfile$+"]")    
+  ; текстовый файл (-infile): потоковое чтение, без загрузки всех ключей в память
+  g_infh = ReadFile(#PB_Any, pubfile$)
+  If g_infh = 0
+    exit("  Couldn't open the file["+pubfile$+"]")
   EndIf
+  g_inmode = 1
+ElseIf binfile$
+  ; бинарный файл (-binfile): записи фиксированного размера, потоковое чтение
+  g_infh = ReadFile(#PB_Any, binfile$)
+  If g_infh = 0
+    exit("  Couldn't open the file["+binfile$+"]")
+  EndIf
+  ; авто-определение размера записи по первому байту (префикс SEC1)
+  firstbyte.i = ReadByte(g_infh) & $FF
+  Select firstbyte
+    Case $04
+      g_binrec = 65   ; несжатый: 04 + X(32) + Y(32)
+    Case $02, $03
+      g_binrec = 33   ; сжатый:   02/03 + X(32)
+    Default
+      exit("  Unknown binary pubkey format (first byte must be 0x02/0x03/0x04)")
+  EndSelect
+  If FileSize(binfile$) % g_binrec <> 0
+    exit("  Binary file size is not a multiple of record size "+Str(g_binrec)+" bytes")
+  EndIf
+  *g_binbuf = AllocateMemory(g_binrec)
+  If *g_binbuf = 0
+    exit("  Can`t allocate binary read buffer")
+  EndIf
+  FileSeek(g_infh, 0)   ; вернуться в начало после чтения байта-префикса
+  g_inmode = 2
+  PrintN("  Binary pubkeys: "+Str(FileSize(binfile$)/g_binrec)+" keys x "+Str(g_binrec)+"B")
 Else
   ; there no files or single pubkeys
-  exit("  At least one pubkey should be set!") 
+  exit("  At least one pubkey should be set!")
 EndIf
 
 
@@ -525,15 +554,20 @@ Else
   exit("  Can`t launch thread")
 EndIf
   
-ForEach publist()
-  
+Define pub$
+Repeat
+  pub$ = NextPub()
+  If pub$ = ""
+    Break              ; ключи закончились
+  EndIf
+
   isreadyjob=0
   Delay(100)
   listpos+1
-  
-  
+
+
   quit=0
-  mainpub = publist()
+  mainpub = pub$
   If Len(cuthex(mainpub))<>128
     ;check if it uncompressed
     If Len(cuthex(mainpub))=130 And Left(cuthex(mainpub),2)="04"
@@ -774,7 +808,13 @@ ForEach publist()
     Print(L("working_time")) : ConsoleColor(10, 0) : PrintN(FormatDate("%hh:%ii:%ss", Date()-workingtime)) : ConsoleColor(7, 0)  
     finditems+1
   EndIf
-Next
+ForEver
+If g_infh
+  CloseFile(g_infh)
+EndIf
+If *g_binbuf
+  FreeMemory(*g_binbuf)
+EndIf
 Title$=" Collider "+#appver+" F: "+Str(finditems)+" T: "+hashd2
 ConsoleTitle(Title$)
 globalquit=1   

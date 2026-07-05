@@ -161,6 +161,9 @@ Define keyMutex, quit, *PointerTable_unalign, *PointerTable
 Define *PrivBIG, *PrivBIG2, *PrivBIG3, *key7, PubkeyBIG.CoordPoint, *MaxNonceBIG, FINDPUBG.CoordPoint, ADDPUBG.CoordPoint, *bufferResult, *addX, *addY, *PRKADDBIG, PUBADDBIG.CoordPoint, REALPUB.CoordPoint, *WINKEY, Two.CoordPoint
 Define *WidthRange
 Define Defdevice$, HT_POW=26, endrangeflag=0, Text$="", pubfile$="", NewList publist.s() , globalquit, isreadyjob, listpos
+; --- Потоковый ввод ключей (для .txt / .bin с десятками миллионов ключей) ---
+; g_inmode: 0 = список в памяти (-pb), 1 = текстовый поток (-infile), 2 = бинарный поток (-binfile)
+Define binfile$="", g_inmode=0, g_infh=0, g_binrec=0, *g_binbuf=0
 Define JobMutex
 Define *GlobKey
 Define *key7

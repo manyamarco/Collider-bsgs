@@ -133,7 +133,7 @@ EndProcedure
 Procedure getprogparam()
   Protected parametrscount, datares$, i, walid
   Shared Defdevice$,  privkey, privkeyend
-  Shared threadtotal, blocktotal, pparam, waletcounter,mainpub, HT_POW, pubfile$, recovery, recoveryfilename$, cnttimer, cnttimer2
+  Shared threadtotal, blocktotal, pparam, waletcounter,mainpub, HT_POW, pubfile$, recovery, recoveryfilename$, cnttimer, cnttimer2, binfile$
   parametrscount=CountProgramParameters()
   
   i=0
@@ -151,7 +151,8 @@ Procedure getprogparam()
            PrintN( " -pke     End range ")
            PrintN( " -w       Set number of baby items 2^")
            PrintN( " -htsz    Set number of HashTable 2^ , default "+Str(HT_POW))
-           PrintN( " -infile  Set file with pubkey for searching in uncompressed/compressed  format (search sequential)")
+           PrintN( " -infile  Set text file with pubkeys (one per line), streamed sequentially. Supports tens of millions of keys")
+           PrintN( " -binfile Set binary file: packed pubkey records 33B (02/03+X) or 65B (04+X+Y), auto-detected. Streamed, RAM O(1)")
            PrintN( " -wl      Set recovery file from which the state will be loaded")
            PrintN( " -wt      Set timer for autosaving current state, default every "+Str(cnttimer)+" seconds")
            PrintN( " -lang    Select language (EN or PT). E.g. -lang EN")
@@ -187,11 +188,19 @@ Procedure getprogparam()
          EndIf   
       Case "-infile"
         Debug "found -infile"
-        i+1   
-        datares$ = ProgramParameter(i) 
-        If datares$<>"" And Left(datares$,1)<>"-"  
-          pubfile$=datares$         
+        i+1
+        datares$ = ProgramParameter(i)
+        If datares$<>"" And Left(datares$,1)<>"-"
+          pubfile$=datares$
           PrintN( "  Arquivo de pubkeys utilizado: "+pubfile$)
+        EndIf
+      Case "-binfile"
+        Debug "found -binfile"
+        i+1
+        datares$ = ProgramParameter(i)
+        If datares$<>"" And Left(datares$,1)<>"-"
+          binfile$=datares$
+          PrintN( "  Binary pubkey file: "+binfile$)
         EndIf
       Case "-t"
         Debug "found -t"
@@ -641,3 +650,45 @@ End
 EndProcedure
 
 
+
+;=============================================================================
+; Потоковый источник публичных ключей.
+; Возвращает следующий pubkey как hex-строку (тот же формат, что и элементы
+; publist(): сжатый 02/03+X, либо несжатый 04+X+Y / X+Y) или "" по окончании.
+; Не держит все ключи в памяти — RAM O(1) при любом числе ключей (.txt/.bin).
+;=============================================================================
+Procedure.s NextPub()
+  Shared publist(), g_inmode, g_infh, g_binrec, *g_binbuf
+  Protected r$, i, b
+
+  Select g_inmode
+    Case 0 ; список в памяти (одиночный -pb)
+      If NextElement(publist())
+        ProcedureReturn publist()
+      EndIf
+      ProcedureReturn ""
+
+    Case 1 ; текстовый поток (-infile): один ключ на строку
+      While Eof(g_infh) = 0
+        r$ = ReadString(g_infh)
+        r$ = RemoveString(RemoveString(Trim(r$), Chr(13)), Chr(10))
+        If r$ <> ""
+          ProcedureReturn r$
+        EndIf
+      Wend
+      ProcedureReturn ""
+
+    Case 2 ; бинарный поток (-binfile): записи фиксированного размера g_binrec
+      If Eof(g_infh) Or ReadData(g_infh, *g_binbuf, g_binrec) < g_binrec
+        ProcedureReturn ""
+      EndIf
+      r$ = ""
+      For i = 0 To g_binrec - 1
+        b = PeekB(*g_binbuf + i) & $FF
+        r$ + RSet(Hex(b), 2, "0")
+      Next
+      ProcedureReturn LCase(r$)
+  EndSelect
+
+  ProcedureReturn ""
+EndProcedure
