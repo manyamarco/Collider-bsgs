@@ -499,7 +499,8 @@ ElseIf binfile$
     exit("  Couldn't open the file["+binfile$+"]")
   EndIf
   ; авто-определение размера записи по первому байту (префикс SEC1)
-  firstbyte.i = ReadByte(g_infh) & $FF
+  Define firstbyte.i
+  firstbyte = ReadByte(g_infh) & $FF
   Select firstbyte
     Case $04
       g_binrec = 65   ; несжатый: 04 + X(32) + Y(32)
