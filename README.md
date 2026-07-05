@@ -234,5 +234,30 @@ chmod +x compilar.sh
 The output will be saved to the `x64` folder as `Collider_Linux`.
 - Alternatively, you can use the PureBasic IDE to compile `Collider.pb`.
 
+## Bulk key input (.txt / .bin — up to tens of millions)
+
+Keys are read as a **stream**, so memory usage stays O(1) regardless of how many keys
+the file holds (design target: tens of millions).
+
+- `-infile <file.txt>` — text file, one public key per line (compressed `02/03…`,
+  uncompressed `04…`, or raw `X||Y`). Streamed line by line.
+- `-binfile <file.bin>` — packed binary, fixed-size records; the record size is
+  auto-detected from the first byte:
+  - **33 bytes** — compressed: `02|03` + `X`(32)
+  - **65 bytes** — uncompressed: `04` + `X`(32) + `Y`(32)
+
+Binary is ~4× smaller than hex text (≈33 MB per million keys vs ≈130 MB), which matters
+at scale. Build a `.bin` from a text list with the helper:
+
+```bash
+python3 scripts/keys_txt_to_bin.py keys.txt keys.bin                 # compressed 33B (default)
+python3 scripts/keys_txt_to_bin.py --uncompressed keys.txt keys.bin  # uncompressed 65B
+Collider_Linux -binfile keys.bin -d 0 -t 512 -b 68 -w 29 -htsz 28 -wt 600
+```
+
+Checkpoint/resume works the same with bulk input: on restart pass `-wl currentwork.txt`
+plus identical parameters. Note keys are searched sequentially — each key is a full BSGS
+pass over the range.
+
 ## __Disclaimer__
 ALL THE CODES, PROGRAM AND INFORMATION ARE FOR EDUCATIONAL PURPOSES ONLY. USE IT AT YOUR OWN RISK. THE DEVELOPER WILL NOT BE RESPONSIBLE FOR ANY LOSS, DAMAGE OR CLAIM ARISING FROM USING THIS PROGRAM.
