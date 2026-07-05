@@ -563,7 +563,7 @@ Repeat
   EndIf
 
   isreadyjob=0
-  Delay(100)
+  Delay(keydelay)
   listpos+1
 
 
@@ -597,10 +597,12 @@ Repeat
   Curve::m_sethex32(FINDPUBG\x, @a$ )
   a$=Right(cutHex(mainpub),64)
   Curve::m_sethex32(FINDPUBG\y, @a$)
-  Print(L("site")) : ConsoleColor(10, 0) : PrintN(L("site_url")) : ConsoleColor(7, 0)
-  Print(L("donate")) : ConsoleColor(10, 0) : PrintN(L("donate_url")) : ConsoleColor(7, 0)
-  Print(L("findpubkey")) : ConsoleColor(10, 0) : PrintN(uncomressed2commpressedPub(Curve::m_gethex32(FINDPUBG\x)+Curve::m_gethex32(FINDPUBG\y))) : ConsoleColor(7, 0)
-  PrintN("  ")
+  If Not quietmode
+    Print(L("site")) : ConsoleColor(10, 0) : PrintN(L("site_url")) : ConsoleColor(7, 0)
+    Print(L("donate")) : ConsoleColor(10, 0) : PrintN(L("donate_url")) : ConsoleColor(7, 0)
+    Print(L("findpubkey")) : ConsoleColor(10, 0) : PrintN(uncomressed2commpressedPub(Curve::m_gethex32(FINDPUBG\x)+Curve::m_gethex32(FINDPUBG\y))) : ConsoleColor(7, 0)
+    PrintN("  ")
+  EndIf
   CopyMemory(FINDPUBG\x,REALPUB\x,32)
   CopyMemory(FINDPUBG\y,REALPUB\y,32)  
   
@@ -698,8 +700,10 @@ Repeat
       ;Curve::m_addX64(*PrivBIG2, *GlobKey, *PrivBIG)
       
       Text$ = ""
-      *Key7 = AllocateMemory(32)
-  
+      If *Key7 = 0            ; аллоцируем один раз и переиспользуем (без утечки)
+        *Key7 = AllocateMemory(32)
+      EndIf
+
       If cnttimer2 = 120
         dice = Random(8, 1)
         If dice = 1

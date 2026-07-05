@@ -133,7 +133,7 @@ EndProcedure
 Procedure getprogparam()
   Protected parametrscount, datares$, i, walid
   Shared Defdevice$,  privkey, privkeyend
-  Shared threadtotal, blocktotal, pparam, waletcounter,mainpub, HT_POW, pubfile$, recovery, recoveryfilename$, cnttimer, cnttimer2, binfile$
+  Shared threadtotal, blocktotal, pparam, waletcounter,mainpub, HT_POW, pubfile$, recovery, recoveryfilename$, cnttimer, cnttimer2, binfile$, quietmode, keydelay
   parametrscount=CountProgramParameters()
   
   i=0
@@ -153,6 +153,8 @@ Procedure getprogparam()
            PrintN( " -htsz    Set number of HashTable 2^ , default "+Str(HT_POW))
            PrintN( " -infile  Set text file with pubkeys (one per line), streamed sequentially. Supports tens of millions of keys")
            PrintN( " -binfile Set binary file: packed pubkey records 33B (02/03+X) or 65B (04+X+Y), auto-detected. Streamed, RAM O(1)")
+           PrintN( " -quiet   Suppress per-key console output for bulk runs (found keys and progress still shown)")
+           PrintN( " -kd      Delay in ms between keys, default "+Str(keydelay)+" (lower it for bulk runs, e.g. -kd 2)")
            PrintN( " -wl      Set recovery file from which the state will be loaded")
            PrintN( " -wt      Set timer for autosaving current state, default every "+Str(cnttimer)+" seconds")
            PrintN( " -lang    Select language (EN or PT). E.g. -lang EN")
@@ -201,6 +203,20 @@ Procedure getprogparam()
         If datares$<>"" And Left(datares$,1)<>"-"
           binfile$=datares$
           PrintN( "  Binary pubkey file: "+binfile$)
+        EndIf
+      Case "-quiet"
+        Debug "found -quiet"
+        quietmode = 1
+        PrintN( "  Quiet mode: per-key output suppressed")
+      Case "-kd"
+        Debug "found -kd"
+        i+1
+        datares$ = ProgramParameter(i)
+        If datares$<>"" And Left(datares$,1)<>"-"
+          keydelay = Val(datares$)
+          If keydelay < 0
+            keydelay = 0
+          EndIf
         EndIf
       Case "-t"
         Debug "found -t"

@@ -241,7 +241,7 @@ Protected batchsize, a$, rest.HashTableResultStructure, freebytes, totalbytes
 Shared  maxnonce, waletcounter, privkey, isruning
 Shared sortjob()
 Shared *GiantArrPacked, *GpuHT, HT_items,HT_mask, quit, globalquit, *WidthRange, endrangeflag,isreadyjob
-Shared *GlobCnt
+Shared *GlobCnt, quietmode
 
 Shared threadtotal
 Shared blocktotal
@@ -1065,7 +1065,9 @@ EndIf
 While isreadyjob
   Delay(1)
 Wend
-Print("  GPU "+Str(gpuid)+L("gpu_jobs")) : ConsoleColor(10, 0) : PrintN(L("finished")) : ConsoleColor(7, 0)
+If Not quietmode
+  Print("  GPU "+Str(gpuid)+L("gpu_jobs")) : ConsoleColor(10, 0) : PrintN(L("finished")) : ConsoleColor(7, 0)
+EndIf
 
 Until globalquit
 

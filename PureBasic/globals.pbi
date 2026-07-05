@@ -164,6 +164,9 @@ Define Defdevice$, HT_POW=26, endrangeflag=0, Text$="", pubfile$="", NewList pub
 ; --- Потоковый ввод ключей (для .txt / .bin с десятками миллионов ключей) ---
 ; g_inmode: 0 = список в памяти (-pb), 1 = текстовый поток (-infile), 2 = бинарный поток (-binfile)
 Define binfile$="", g_inmode=0, g_infh=0, g_binrec=0, *g_binbuf=0
+; --- Пропускная способность для батч-прогонов ---
+; quietmode: подавить поключевой консольный вывод; keydelay: пауза (мс) между ключами
+Define quietmode=0, keydelay=100
 Define JobMutex
 Define *GlobKey
 Define *key7

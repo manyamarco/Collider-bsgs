@@ -259,5 +259,31 @@ Checkpoint/resume works the same with bulk input: on restart pass `-wl currentwo
 plus identical parameters. Note keys are searched sequentially — each key is a full BSGS
 pass over the range.
 
+## Bulk multi-key tuning (many keys)
+
+For **T** target keys over a range of size **N**, the total work is fundamentally
+**T · (N/m)** giant steps, where **m = 2^`-w`** is the baby-step table size. The baby
+table is built **once** and shared across all keys, which is already the optimal
+O(√(T·N)) multi-target structure — so the levers are the table size and per-key overhead,
+not the algorithm.
+
+- **Make the baby table as big as VRAM allows.** Larger `-w`/`-htsz` ⇒ shorter giant
+  walk per key ⇒ higher throughput. The balance point is `m ≈ min(2^30, √(T·N))`; VRAM
+  (not the host) is the real ceiling. For RTX 3080 (10 GB): `-w 29 -htsz 28` (~8 GB).
+- **`-quiet`** — suppress per-key console output. On tens of millions of keys the
+  per-key prints alone cost hours of pure console I/O; found keys and the periodic
+  `[BSGS: … Ekeys/s]` progress line are still shown.
+- **`-kd <ms>`** — delay between keys (default `100`). Lower it for bulk runs and
+  measure, e.g. `-kd 2`. (Worker↔host sync uses `isreadyjob`/`isruning` flags, not this
+  delay, so lowering it is safe.)
+
+Example bulk run:
+```bash
+Collider_Linux -binfile keys.bin -d 0 -t 512 -b 68 -w 29 -htsz 28 -quiet -kd 2 -wt 600
+```
+
+Measure the effect on your own GPU: run the same file with and without `-quiet -kd 2`
+and compare the `[GPU: … Mk/s]` and `[BSGS: … Ekeys/s]` figures the tool prints.
+
 ## __Disclaimer__
 ALL THE CODES, PROGRAM AND INFORMATION ARE FOR EDUCATIONAL PURPOSES ONLY. USE IT AT YOUR OWN RISK. THE DEVELOPER WILL NOT BE RESPONSIBLE FOR ANY LOSS, DAMAGE OR CLAIM ARISING FROM USING THIS PROGRAM.
